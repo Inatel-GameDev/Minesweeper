@@ -12,16 +12,17 @@ class Grid
 {
     public bool isGameOver = false; // Indica se o jogo foi perdido
     public bool isGameWon = false; // Indica se o jogo foi ganho
-    private int nBombas = 10;
-    private int tamanho = 10; // Tamanho da grid NxN
+    private int nBombas;
+    private int altura, largura; // Dimensões da grid MxN
     public Cell[,] grid;
     private Random rand = new Random(); // Criação do Random fora do loop
 
-    public Grid(int nBombas, int tamanho)
+    public Grid(int largura, int altura, int nBombas)
     {
         this.nBombas = nBombas;
-        this.tamanho = tamanho;
-        grid = new Cell[tamanho, tamanho];
+        this.altura = altura;
+        this.largura = largura;
+        grid = new Cell[altura, largura];
         InicializarGrid();
     }
 
@@ -33,8 +34,8 @@ class Grid
 
     private void SetarGrid()
     {
-        for (int i = 0; i < tamanho; i++)
-            for (int j = 0; j < tamanho; j++)
+        for (int i = 0; i < altura; i++)
+            for (int j = 0; j < largura; j++)
                 grid[i, j] = new Cell(); // Inicializa cada célula como um novo objeto
     }
 
@@ -45,8 +46,8 @@ class Grid
             int x, y;
             do
             {
-                x = rand.Next(0, tamanho);
-                y = rand.Next(0, tamanho);
+                x = rand.Next(0, largura);
+                y = rand.Next(0, altura);
             } while (grid[y, x].isMine);
 
             grid[y, x].isMine = true;
@@ -60,7 +61,7 @@ class Grid
         {
             for (int j = x - 1; j <= x + 1; j++)
             {
-                if (i >= 0 && i < tamanho && j >= 0 && j < tamanho && !grid[i, j].isMine)
+                if (i >= 0 && i < altura && j >= 0 && j < largura && !grid[i, j].isMine)
                 {
                     grid[i, j].num++;
                 }
@@ -83,12 +84,11 @@ class Grid
 
         if (grid[y, x].num == 0)
         {
-            // Revela células vizinhas se não tiver minas ao redor
             for (int i = y - 1; i <= y + 1; i++)
             {
                 for (int j = x - 1; j <= x + 1; j++)
                 {
-                    if (i >= 0 && i < tamanho && j >= 0 && j < tamanho && !grid[i, j].isRevealed && !grid[i, j].isFlagged && !grid[i, j].isMine)
+                    if (i >= 0 && i < altura && j >= 0 && j < largura && !grid[i, j].isRevealed && !grid[i, j].isFlagged && !grid[i, j].isMine)
                     {
                         RevelaCelula(i, j);
                     }
@@ -111,7 +111,7 @@ class Grid
         foreach (var celula in grid)
         {
             if (!celula.isMine && !celula.isRevealed)
-                return; // Ainda há células seguras não reveladas
+                return;
         }
 
         isGameWon = true;
@@ -123,25 +123,25 @@ class Grid
         Console.Clear();
         Console.WriteLine("Campo Minado:\n");
 
-        for (int y = 0; y < tamanho; y++)
+        for (int y = 0; y < altura; y++)
         {
-            for (int x = 0; x < tamanho; x++)
+            for (int x = 0; x < largura; x++)
             {
                 Cell celula = grid[y, x];
 
                 if (!celula.isRevealed)
                 {
                     if (celula.isFlagged)
-                        Console.Write("F "); // Célula marcada com bandeira
+                        Console.Write("F ");
                     else
-                        Console.Write("# "); // Célula escondida
+                        Console.Write("# ");
                 }
                 else
                 {
                     if (celula.isMine)
-                        Console.Write("* "); // Mina revelada
+                        Console.Write("* ");
                     else
-                        Console.Write(celula.num + " "); // Número de minas ao redor
+                        Console.Write(celula.num + " ");
                 }
             }
             Console.WriteLine();
@@ -179,7 +179,7 @@ class Program
 {
     static void Main()
     {
-        Grid grid = new Grid(10, 10); // 10 minas e uma grid 10x10
+        Grid grid = new Grid(12, 8, 10); // 10 minas, grid 8x12
         string input;
 
         while (!grid.isGameOver && !grid.isGameWon)
