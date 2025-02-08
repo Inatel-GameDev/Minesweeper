@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class GameLogic : MonoBehaviour
@@ -8,12 +9,17 @@ public class GameLogic : MonoBehaviour
     public int height = 16;
     public int nBombs = 10;
 
+    private int remainingFlags;
+    private int remainingTiles;
+
     private BoardRender boardRender;
     private Cell[,] grid;
 
     private void Awake()
     {
         boardRender = GetComponentInChildren<BoardRender>();
+        remainingFlags = nBombs;
+        remainingTiles = width * height - nBombs;
     }
 
     private void Start()
@@ -85,8 +91,19 @@ public class GameLogic : MonoBehaviour
 
         try
         {
-            grid[cellPosition.x, cellPosition.y].isFlagged = !grid[cellPosition.x, cellPosition.y].isFlagged;
-            boardRender.Show(grid);
+            if (!grid[cellPosition.x, cellPosition.y].isRevealed)
+            {
+                if (grid[cellPosition.x, cellPosition.y].isMine)
+                {
+                    if (grid[cellPosition.x, cellPosition.y].isFlagged) remainingFlags++;
+                    else remainingFlags--;
+                }
+
+                grid[cellPosition.x, cellPosition.y].isFlagged = !grid[cellPosition.x, cellPosition.y].isFlagged;
+
+                CheckVictory();
+                boardRender.Show(grid);
+            }
         } catch (IndexOutOfRangeException)
         {
             Debug.LogError("Você clicou fora da grid");
@@ -108,22 +125,22 @@ public class GameLogic : MonoBehaviour
             if (grid[x, y].isMine)
             {
                 Debug.Log("Você perdeu");
-                boardRender.Show(grid);
-                return;
+                GameOverProtocol();
             }
 
-            if (grid[x, y].num > 0)
+            else if (grid[x, y].num > 0)
             {
                 grid[x, y].isRevealed = true;
-                boardRender.Show(grid);
-                return;
+                remainingTiles--;
             }
 
-            if (grid[x, y].num == 0)
+            else if (grid[x, y].num == 0)
             {
                 Flood(grid[x, y]);
-                return;
             }
+
+            CheckVictory();
+            boardRender.Show(grid);
         }
         catch (IndexOutOfRangeException)
         {
@@ -145,6 +162,7 @@ public class GameLogic : MonoBehaviour
             if (grid[x, y].isRevealed) continue;
 
             grid[x, y].isRevealed = true;
+            remainingTiles--;
 
             if (grid[x, y].num > 0) continue;
 
@@ -165,7 +183,29 @@ public class GameLogic : MonoBehaviour
                 }
             }
         }
+    }
 
-        boardRender.Show(grid);
+    private void GameOverProtocol()
+    {
+        for (int i =  0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                if (grid[i, j].isMine)
+                {
+                    grid[i, j].isRevealed = true;
+                    boardRender.Show(grid);
+                }
+            }
+        }
+    }
+
+    private void CheckVictory()
+    {
+        Debug.Log("Faltam: "+remainingTiles+" Tiles e "+remainingFlags+" Flags");
+        if (remainingTiles == 0 && remainingFlags == 0)
+        {
+            Debug.Log("Você venceu!");
+        }
     }
 }
