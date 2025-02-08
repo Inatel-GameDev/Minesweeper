@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameLogic : MonoBehaviour
@@ -20,6 +22,12 @@ public class GameLogic : MonoBehaviour
         boardRender.Show(grid);
     }
 
+    private void Update()
+    {
+        if (Input.GetMouseButtonDown(1)) Flag();
+        if (Input.GetMouseButtonDown(0)) Reveal();
+    }
+
     private void SetGrid()
     {
         grid = new Cell[width, height];
@@ -31,7 +39,7 @@ public class GameLogic : MonoBehaviour
                 cell.coordinates = new Vector3Int(i, j, 0);
                 cell.isMine = false;
                 cell.isFlagged = false;
-                cell.isRevealed = true;
+                cell.isRevealed = false;
                 cell.num = 0;
                 grid[i, j] = cell;
             }
@@ -47,8 +55,8 @@ public class GameLogic : MonoBehaviour
             int i, j;
             do
             {
-                i = Random.Range(0, width);
-                j = Random.Range(0, height);
+                i = UnityEngine.Random.Range(0, width);
+                j = UnityEngine.Random.Range(0, height);
             } while (grid[i, j].isMine);
 
             grid[i, j].isMine = true;
@@ -68,5 +76,96 @@ public class GameLogic : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void Flag()
+    {
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3Int cellPosition = boardRender.tilemap.WorldToCell(worldPosition);
+
+        try
+        {
+            grid[cellPosition.x, cellPosition.y].isFlagged = !grid[cellPosition.x, cellPosition.y].isFlagged;
+            boardRender.Show(grid);
+        } catch (IndexOutOfRangeException)
+        {
+            Debug.LogError("Você clicou fora da grid");
+        }
+    }
+
+    private void Reveal()
+    {
+        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+        Vector3Int cellPosition = boardRender.tilemap.WorldToCell(worldPosition);
+
+        try
+        {
+            int x = cellPosition.x;
+            int y = cellPosition.y;
+
+            if (grid[x, y].isFlagged || grid[x, y].isRevealed) return;
+
+            if (grid[x, y].isMine)
+            {
+                Debug.Log("Você perdeu");
+                boardRender.Show(grid);
+                return;
+            }
+
+            if (grid[x, y].num > 0)
+            {
+                grid[x, y].isRevealed = true;
+                boardRender.Show(grid);
+                return;
+            }
+
+            if (grid[x, y].num == 0)
+            {
+                Flood(grid[x, y]);
+                return;
+            }
+        }
+        catch (IndexOutOfRangeException)
+        {
+            Debug.LogError("Você clicou fora da grid");
+        }
+    }
+
+    private void Flood(Cell startCell)
+    {
+        Queue<Cell> queue = new Queue<Cell>();
+        queue.Enqueue(startCell);
+
+        while (queue.Count > 0)
+        {
+            Cell cell = queue.Dequeue();
+            int x = cell.coordinates.x;
+            int y = cell.coordinates.y;
+
+            if (grid[x, y].isRevealed) continue;
+
+            grid[x, y].isRevealed = true;
+
+            if (grid[x, y].num > 0) continue;
+
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    int nx = x + dx;
+                    int ny = y + dy;
+
+                    if (nx >= 0 && nx < width && ny >= 0 && ny < height)
+                    {
+                        if (!grid[nx, ny].isRevealed && !grid[nx, ny].isMine && !grid[nx, ny].isFlagged)
+                        {
+                            queue.Enqueue(grid[nx, ny]);
+                        }
+                    }
+                }
+            }
+        }
+
+        boardRender.Show(grid);
     }
 }
