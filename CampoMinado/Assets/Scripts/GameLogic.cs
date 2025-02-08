@@ -15,15 +15,20 @@ public class GameLogic : MonoBehaviour
     private BoardRender boardRender;
     private Cell[,] grid;
 
+    public GameObject mainButtonManagerObject;
+    private MainButtonManager mainButtonManagerScript;
+
     private void Awake()
     {
         boardRender = GetComponentInChildren<BoardRender>();
+        mainButtonManagerScript = mainButtonManagerObject.GetComponent<MainButtonManager>();
         remainingFlags = nBombs;
         remainingTiles = width * height - nBombs;
     }
 
     private void Start()
     {
+        mainButtonManagerScript.enableHappy();
         SetGrid();
         boardRender.Show(grid);
     }
@@ -187,6 +192,7 @@ public class GameLogic : MonoBehaviour
 
     private void GameOverProtocol()
     {
+        mainButtonManagerScript.enableLose();
         for (int i =  0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
@@ -205,6 +211,7 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Faltam: "+remainingTiles+" Tiles e "+remainingFlags+" Flags");
         if (remainingTiles == 0 && remainingFlags == 0)
         {
+            mainButtonManagerScript.enableWon();
             Debug.Log("Você venceu!");
         }
     }
