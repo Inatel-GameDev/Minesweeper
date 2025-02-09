@@ -11,10 +11,12 @@ public class GameLogic : MonoBehaviour
     public int height = 16;
     public int nBombs = 10;
 
-    private int remainingFlags;
+    private int remainingMines;
     private int remainingTiles;
+    private int remainingFlags;
 
     private bool firstClick = true;
+    private bool gameLock = false;
     private Vector2Int firstCoordinates;
 
     private BoardRender boardRender;
@@ -25,21 +27,24 @@ public class GameLogic : MonoBehaviour
         instance = this;
 
         boardRender = GetComponentInChildren<BoardRender>();
-        remainingFlags = nBombs;
-        remainingTiles = width * height - nBombs;
     }
 
-    private void Start()
+    public void Start()
     {
+        remainingMines = nBombs;
+        remainingFlags = nBombs;
+        remainingTiles = width * height - nBombs;
+        gameLock = false;
         MainButtonManager.instance.enableHappy();
+        Decoder.instance.SetDisplay(remainingFlags);
         SetGrid();
         boardRender.Show(grid);
     }
 
     private void Update()
     {
-        if (Input.GetMouseButtonDown(1)) Flag();
-        if (Input.GetMouseButtonDown(0)) Reveal();
+        if (Input.GetMouseButtonDown(1) && !gameLock) Flag();
+        if (Input.GetMouseButtonDown(0) && !gameLock) Reveal();
     }
 
     private void SetGrid()
@@ -99,19 +104,22 @@ public class GameLogic : MonoBehaviour
 
         try
         {
-            if (!grid[cellPosition.x, cellPosition.y].isRevealed)
+            if (grid[cellPosition.x, cellPosition.y].isRevealed) return;
+
+            if (grid[cellPosition.x, cellPosition.y].isMine)
             {
-                if (grid[cellPosition.x, cellPosition.y].isMine)
-                {
-                    if (grid[cellPosition.x, cellPosition.y].isFlagged) remainingFlags++;
-                    else remainingFlags--;
-                }
-
-                grid[cellPosition.x, cellPosition.y].isFlagged = !grid[cellPosition.x, cellPosition.y].isFlagged;
-
-                CheckVictory();
-                boardRender.Show(grid);
+                if (grid[cellPosition.x, cellPosition.y].isFlagged) remainingMines++;
+                else remainingMines--;
             }
+
+            if (grid[cellPosition.x, cellPosition.y].isFlagged) remainingFlags++;
+            else remainingFlags--;            
+
+            grid[cellPosition.x, cellPosition.y].isFlagged = !grid[cellPosition.x, cellPosition.y].isFlagged;
+
+            Decoder.instance.SetDisplay(remainingFlags);
+            CheckVictory();
+            boardRender.Show(grid);
         } catch (IndexOutOfRangeException)
         {
             Debug.LogError("Você clicou fora da grid");
@@ -216,14 +224,16 @@ public class GameLogic : MonoBehaviour
                 }
             }
         }
+        gameLock = true;
     }
 
     private void CheckVictory()
     {
-        Debug.Log("Faltam: "+remainingTiles+" Tiles e "+remainingFlags+" Flags");
-        if (remainingTiles == 0 && remainingFlags == 0)
+        Debug.Log("Faltam: "+remainingTiles+" Tiles e "+remainingMines+" Flags");
+        if (remainingTiles == 0 && remainingMines == 0)
         {
             MainButtonManager.instance.enableWon();
+            gameLock = true;
             Debug.Log("Você venceu!");
         }
     }

@@ -23,9 +23,9 @@ public class MainButtonManager : MonoBehaviour
         release.enabled = false;
     }
 
-    private void nMouseDown()
+    private void OnMouseDown()
     {
-        
+        GameLogic.instance.Start();
     }
 
     public void enableHappy()
