@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class GameLogic : MonoBehaviour
 {
+    public static GameLogic instance;
+
     public int width = 16;
     public int height = 16;
     public int nBombs = 10;
@@ -12,23 +14,24 @@ public class GameLogic : MonoBehaviour
     private int remainingFlags;
     private int remainingTiles;
 
+    private bool firstClick = true;
+    private Vector2Int firstCoordinates;
+
     private BoardRender boardRender;
     private Cell[,] grid;
 
-    public GameObject mainButtonManagerObject;
-    private MainButtonManager mainButtonManagerScript;
-
     private void Awake()
     {
+        instance = this;
+
         boardRender = GetComponentInChildren<BoardRender>();
-        mainButtonManagerScript = mainButtonManagerObject.GetComponent<MainButtonManager>();
         remainingFlags = nBombs;
         remainingTiles = width * height - nBombs;
     }
 
     private void Start()
     {
-        mainButtonManagerScript.enableHappy();
+        MainButtonManager.instance.enableHappy();
         SetGrid();
         boardRender.Show(grid);
     }
@@ -125,6 +128,15 @@ public class GameLogic : MonoBehaviour
             int x = cellPosition.x;
             int y = cellPosition.y;
 
+            if (firstClick)
+            {
+                do
+                {
+                    SetGrid();
+                } while (grid[x, y].isMine);
+                firstClick = false;
+            }
+
             if (grid[x, y].isFlagged || grid[x, y].isRevealed) return;
 
             if (grid[x, y].isMine)
@@ -192,7 +204,7 @@ public class GameLogic : MonoBehaviour
 
     private void GameOverProtocol()
     {
-        mainButtonManagerScript.enableLose();
+        MainButtonManager.instance.enableLose();
         for (int i =  0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
@@ -211,7 +223,7 @@ public class GameLogic : MonoBehaviour
         Debug.Log("Faltam: "+remainingTiles+" Tiles e "+remainingFlags+" Flags");
         if (remainingTiles == 0 && remainingFlags == 0)
         {
-            mainButtonManagerScript.enableWon();
+            MainButtonManager.instance.enableWon();
             Debug.Log("Você venceu!");
         }
     }
