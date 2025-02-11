@@ -6,6 +6,7 @@ using UnityEngine;
 public class GameLogic : MonoBehaviour
 {
     public static GameLogic instance;
+    public Decoder decoderFlag;
 
     public int width = 16;
     public int height = 16;
@@ -35,8 +36,10 @@ public class GameLogic : MonoBehaviour
         remainingFlags = nBombs;
         remainingTiles = width * height - nBombs;
         gameLock = false;
+        firstClick = true;
         MainButtonManager.instance.enableHappy();
-        Decoder.instance.SetDisplay(remainingFlags);
+
+        decoderFlag.SetDisplay(remainingFlags);
         SetGrid();
         boardRender.Show(grid);
     }
@@ -117,7 +120,7 @@ public class GameLogic : MonoBehaviour
 
             grid[cellPosition.x, cellPosition.y].isFlagged = !grid[cellPosition.x, cellPosition.y].isFlagged;
 
-            Decoder.instance.SetDisplay(remainingFlags);
+            decoderFlag.SetDisplay(remainingFlags);
             CheckVictory();
             boardRender.Show(grid);
         } catch (IndexOutOfRangeException)

@@ -5,6 +5,7 @@ using UnityEngine;
 public class MainButtonManager : MonoBehaviour
 {
     public static MainButtonManager instance;
+    public Clock clock;
 
     public SpriteRenderer happy;
     public SpriteRenderer won;
@@ -26,6 +27,7 @@ public class MainButtonManager : MonoBehaviour
     private void OnMouseDown()
     {
         GameLogic.instance.Start();
+        clock.Start();
     }
 
     public void enableHappy()

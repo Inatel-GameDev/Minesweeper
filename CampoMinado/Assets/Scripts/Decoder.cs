@@ -8,12 +8,6 @@ public class Decoder : MonoBehaviour
     public GameObject[] dezenaSprites;
     public GameObject[] centenaSprites;
 
-    public static Decoder instance;
-
-    private void Awake()
-    {
-        instance = this;
-    }
     public void SetDisplay(int value)
     {
         value = Mathf.Clamp(value, 0, 999);
