@@ -70,6 +70,21 @@ public class GameLogic : MonoBehaviour
         SetMines();
     }
 
+    private void ResetGrid()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                grid[i, j].num = 0;
+                grid[i, j].isMine = false;
+                grid[i, j].isRevealed = false;
+            }
+        }
+
+        SetMines();
+    }
+
     private void SetMines()
     {
         for (int t = 0; t < nBombs; t++)
@@ -141,10 +156,9 @@ public class GameLogic : MonoBehaviour
 
             if (firstClick)
             {
-                do
-                {
-                    SetGrid();
-                } while (grid[x, y].isMine);
+                while (grid[x, y].isMine || grid[x, y].num > 0)
+                    ResetGrid();
+                
                 firstClick = false;
             }
 

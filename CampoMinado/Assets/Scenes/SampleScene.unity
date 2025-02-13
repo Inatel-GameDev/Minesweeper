@@ -4597,7 +4597,7 @@ MonoBehaviour:
   decoderFlag: {fileID: 813726830}
   width: 16
   height: 16
-  nBombs: 255
+  nBombs: 40
 --- !u!156049354 &1422941980
 Grid:
   m_ObjectHideFlags: 0
