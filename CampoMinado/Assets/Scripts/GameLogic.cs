@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
+//using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class GameLogic : MonoBehaviour
@@ -125,7 +125,7 @@ public class GameLogic : MonoBehaviour
             boardRender.Show(grid);
         } catch (IndexOutOfRangeException)
         {
-            Debug.LogError("Você clicou fora da grid");
+            Debug.LogError("Vocï¿½ clicou fora da grid");
         }
     }
 
@@ -152,7 +152,7 @@ public class GameLogic : MonoBehaviour
 
             if (grid[x, y].isMine)
             {
-                Debug.Log("Você perdeu");
+                Debug.Log("Vocï¿½ perdeu");
                 GameOverProtocol();
             }
 
@@ -172,7 +172,7 @@ public class GameLogic : MonoBehaviour
         }
         catch (IndexOutOfRangeException)
         {
-            Debug.LogError("Você clicou fora da grid");
+            Debug.LogError("Vocï¿½ clicou fora da grid");
         }
     }
 
@@ -237,7 +237,7 @@ public class GameLogic : MonoBehaviour
         {
             MainButtonManager.instance.enableWon();
             gameLock = true;
-            Debug.Log("Você venceu!");
+            Debug.Log("Vocï¿½ venceu!");
         }
     }
 }
