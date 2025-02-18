@@ -4,11 +4,13 @@ using UnityEngine;
 
 public class Clock : MonoBehaviour
 {
+    public static Clock instance;
     private Decoder decoderClock;
     private int time = 0;
 
     private void Awake()
     {
+        instance = this;
         decoderClock = GetComponent<Decoder>();
     }
 
@@ -27,5 +29,10 @@ public class Clock : MonoBehaviour
             time = (time >= 999) ? 0 : time + 1;
             decoderClock.SetDisplay(time);
         }
+    }
+
+    public void Halt()
+    {
+        CancelInvoke("UseClock");
     }
 }

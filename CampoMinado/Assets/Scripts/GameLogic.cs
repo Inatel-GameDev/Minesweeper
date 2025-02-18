@@ -70,6 +70,21 @@ public class GameLogic : MonoBehaviour
         SetMines();
     }
 
+    private void ResetGrid()
+    {
+        for (int i = 0; i < width; i++)
+        {
+            for (int j = 0; j < height; j++)
+            {
+                grid[i, j].num = 0;
+                grid[i, j].isMine = false;
+                grid[i, j].isRevealed = false;
+            }
+        }
+
+        SetMines();
+    }
+
     private void SetMines()
     {
         for (int t = 0; t < nBombs; t++)
@@ -107,18 +122,27 @@ public class GameLogic : MonoBehaviour
 
         try
         {
-            if (grid[cellPosition.x, cellPosition.y].isRevealed) return;
+            int x = cellPosition.x;
+            int y = cellPosition.y;
 
-            if (grid[cellPosition.x, cellPosition.y].isMine)
+            if (grid[x, y].isRevealed) return;
+
+            if (grid[x, y].isFlagged)
             {
-                if (grid[cellPosition.x, cellPosition.y].isFlagged) remainingMines++;
-                else remainingMines--;
+                if (grid[x, y].isMine)
+                    remainingMines++;
+
+                remainingFlags++;
+                grid[x, y].isFlagged = false;
             }
+            else if (remainingFlags > 0)
+            {
+                if (grid[x, y].isMine)
+                    remainingMines--;
 
-            if (grid[cellPosition.x, cellPosition.y].isFlagged) remainingFlags++;
-            else remainingFlags--;            
-
-            grid[cellPosition.x, cellPosition.y].isFlagged = !grid[cellPosition.x, cellPosition.y].isFlagged;
+                remainingFlags--;
+                grid[x, y].isFlagged = true;
+            }
 
             decoderFlag.SetDisplay(remainingFlags);
             CheckVictory();
@@ -141,10 +165,9 @@ public class GameLogic : MonoBehaviour
 
             if (firstClick)
             {
-                do
-                {
-                    SetGrid();
-                } while (grid[x, y].isMine);
+                while (grid[x, y].isMine || grid[x, y].num > 0)
+                    ResetGrid();
+                
                 firstClick = false;
             }
 
@@ -189,6 +212,12 @@ public class GameLogic : MonoBehaviour
 
             if (grid[x, y].isRevealed) continue;
 
+            if (grid[x, y].isFlagged)
+            {
+                remainingFlags++;
+                grid[x, y].isFlagged = false;
+            }
+
             grid[x, y].isRevealed = true;
             remainingTiles--;
 
@@ -203,7 +232,7 @@ public class GameLogic : MonoBehaviour
 
                     if (nx >= 0 && nx < width && ny >= 0 && ny < height)
                     {
-                        if (!grid[nx, ny].isRevealed && !grid[nx, ny].isMine && !grid[nx, ny].isFlagged)
+                        if (!grid[nx, ny].isRevealed && !grid[nx, ny].isMine)
                         {
                             queue.Enqueue(grid[nx, ny]);
                         }
@@ -211,6 +240,7 @@ public class GameLogic : MonoBehaviour
                 }
             }
         }
+        decoderFlag.SetDisplay(remainingFlags);
     }
 
     private void GameOverProtocol()
@@ -227,6 +257,7 @@ public class GameLogic : MonoBehaviour
                 }
             }
         }
+        Clock.instance.Halt();
         gameLock = true;
     }
 
@@ -237,6 +268,7 @@ public class GameLogic : MonoBehaviour
         {
             MainButtonManager.instance.enableWon();
             gameLock = true;
+            Clock.instance.Halt();
             Debug.Log("Você venceu!");
         }
     }
