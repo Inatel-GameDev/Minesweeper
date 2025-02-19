@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class GameLogic : MonoBehaviour
@@ -44,12 +42,6 @@ public class GameLogic : MonoBehaviour
         boardRender.Show(grid);
     }
 
-    private void Update()
-    {
-        if (Input.GetMouseButtonDown(1) && !gameLock) Flag();
-        if (Input.GetMouseButtonDown(0) && !gameLock) Reveal();
-    }
-
     private void SetGrid()
     {
         grid = new Cell[width, height];
@@ -59,9 +51,8 @@ public class GameLogic : MonoBehaviour
             {
                 Cell cell = new Cell();
                 cell.coordinates = new Vector3Int(i, j, 0);
-                cell.isMine = false;
-                cell.isFlagged = false;
-                cell.isRevealed = false;
+                cell.type = Type.Empty;
+                cell.state = State.Default;
                 cell.num = 0;
                 grid[i, j] = cell;
             }
@@ -77,8 +68,7 @@ public class GameLogic : MonoBehaviour
             for (int j = 0; j < height; j++)
             {
                 grid[i, j].num = 0;
-                grid[i, j].isMine = false;
-                grid[i, j].isRevealed = false;
+                grid[i, j].type = Type.Empty;
             }
         }
 
@@ -94,9 +84,9 @@ public class GameLogic : MonoBehaviour
             {
                 i = UnityEngine.Random.Range(0, width);
                 j = UnityEngine.Random.Range(0, height);
-            } while (grid[i, j].isMine);
+            } while (grid[i, j].type == Type.Mine);
 
-            grid[i, j].isMine = true;
+            grid[i, j].type = Type.Mine;
             SetNumbers(i, j);
         }
     }
@@ -107,156 +97,107 @@ public class GameLogic : MonoBehaviour
         {
             for (int jj = j - 1; jj <= j + 1; jj++)
             {
-                if (ii >= 0 && ii < width && jj >= 0 && jj < height && !grid[ii, jj].isMine)
+                if (ii >= 0 && ii < width && jj >= 0 && jj < height && grid[ii, jj].type != Type.Mine)
                 {
+                    grid[ii, jj].type = Type.Number;
                     grid[ii, jj].num++;
                 }
             }
         }
     }
 
-    private void Flag()
+    private void Update()
     {
-        Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector3Int cellPosition = boardRender.tilemap.WorldToCell(worldPosition);
-
-        try
-        {
-            int x = cellPosition.x;
-            int y = cellPosition.y;
-
-            if (grid[x, y].isRevealed) return;
-
-            if (grid[x, y].isFlagged)
-            {
-                if (grid[x, y].isMine)
-                    remainingMines++;
-
-                remainingFlags++;
-                grid[x, y].isFlagged = false;
-            }
-            else if (remainingFlags > 0)
-            {
-                if (grid[x, y].isMine)
-                    remainingMines--;
-
-                remainingFlags--;
-                grid[x, y].isFlagged = true;
-            }
-
-            decoderFlag.SetDisplay(remainingFlags);
-            CheckVictory();
-            boardRender.Show(grid);
-        } catch (IndexOutOfRangeException)
-        {
-            Debug.LogError("Você clicou fora da grid");
-        }
+        if (Input.GetMouseButtonDown(1) && !gameLock) InputProtocol(true);
+        if (Input.GetMouseButtonDown(0) && !gameLock) InputProtocol(false);
     }
 
-    private void Reveal()
+    private void InputProtocol(bool flag)
     {
         Vector3 worldPosition = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         Vector3Int cellPosition = boardRender.tilemap.WorldToCell(worldPosition);
 
+        int x = cellPosition.x;
+        int y = cellPosition.y;
+
         try
         {
-            int x = cellPosition.x;
-            int y = cellPosition.y;
-
-            if (firstClick)
-            {
-                while (grid[x, y].isMine || grid[x, y].num > 0)
-                    ResetGrid();
-                
-                firstClick = false;
-            }
-
-            if (grid[x, y].isFlagged || grid[x, y].isRevealed) return;
-
-            if (grid[x, y].isMine)
-            {
-                Debug.Log("Você perdeu");
-                GameOverProtocol();
-            }
-
-            else if (grid[x, y].num > 0)
-            {
-                grid[x, y].isRevealed = true;
-                remainingTiles--;
-            }
-
-            else if (grid[x, y].num == 0)
-            {
-                Flood(grid[x, y]);
-            }
-
+            Cell curr = grid[x, y];
+            if (flag) Flag(curr);
+            else Reveal(curr);
+            
+            decoderFlag.SetDisplay(remainingFlags);
             CheckVictory();
             boardRender.Show(grid);
         }
         catch (IndexOutOfRangeException)
         {
-            Debug.LogError("Você clicou fora da grid");
+            Debug.Log("Você clicou fora da grid");
+        }
+    }
+
+    private void Flag(Cell curr)
+    {
+        if (curr == null) return;
+
+        if (curr.state == State.Revealed) return;
+
+        if (curr.state == State.Flagged)
+        {
+            curr.state = State.Default;
+            remainingFlags++;
+            remainingMines += (curr.type == Type.Mine) ? 1 : 0;
+        }
+        else
+        {
+            curr.state = State.Flagged;
+            remainingFlags--;
+            remainingMines -= (curr.type == Type.Mine) ? 1 : 0;
+        }
+    }
+
+    private void Reveal(Cell curr)
+    {
+        if (curr == null) return;
+
+        while (firstClick && curr.type != Type.Empty)
+            ResetGrid();
+        firstClick = false;
+
+        if (curr.state != State.Default) return;
+
+        if (curr.type == Type.Mine) GameOverProtocol();
+
+        else
+        {
+            remainingTiles--;
+            curr.state = State.Revealed;
+
+            if (curr.type == Type.Empty) Flood(curr);
         }
     }
 
     private void Flood(Cell startCell)
     {
-        Queue<Cell> queue = new Queue<Cell>();
-        queue.Enqueue(startCell);
+        int x = startCell.coordinates.x;
+        int y = startCell.coordinates.y;
 
-        while (queue.Count > 0)
+        for (int i = x - 1; i <= x + 1; i++)
         {
-            Cell cell = queue.Dequeue();
-            int x = cell.coordinates.x;
-            int y = cell.coordinates.y;
-
-            if (grid[x, y].isRevealed) continue;
-
-            if (grid[x, y].isFlagged)
+            for (int j = y - 1; j <= y + 1; j++)
             {
-                remainingFlags++;
-                grid[x, y].isFlagged = false;
-            }
-
-            grid[x, y].isRevealed = true;
-            remainingTiles--;
-
-            if (grid[x, y].num > 0) continue;
-
-            for (int dx = -1; dx <= 1; dx++)
-            {
-                for (int dy = -1; dy <= 1; dy++)
-                {
-                    int nx = x + dx;
-                    int ny = y + dy;
-
-                    if (nx >= 0 && nx < width && ny >= 0 && ny < height)
-                    {
-                        if (!grid[nx, ny].isRevealed && !grid[nx, ny].isMine)
-                        {
-                            queue.Enqueue(grid[nx, ny]);
-                        }
-                    }
-                }
+                if (i >= 0 && i < width && j >= 0 && j < height && grid[i, j].type != Type.Mine && grid[i, j].state != State.Revealed)
+                    Reveal(grid[i, j]);
             }
         }
-        decoderFlag.SetDisplay(remainingFlags);
     }
 
     private void GameOverProtocol()
     {
+        foreach (Cell cell in grid)
+            if (cell.type == Type.Mine) cell.state = State.Revealed;
+
         MainButtonManager.instance.enableLose();
-        for (int i =  0; i < width; i++)
-        {
-            for (int j = 0; j < height; j++)
-            {
-                if (grid[i, j].isMine)
-                {
-                    grid[i, j].isRevealed = true;
-                    boardRender.Show(grid);
-                }
-            }
-        }
         Clock.instance.Halt();
         gameLock = true;
     }

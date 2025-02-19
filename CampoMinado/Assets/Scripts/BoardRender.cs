@@ -40,12 +40,14 @@ public class BoardRender : MonoBehaviour
 
     private Tile ConvertToTile(Cell cell)
     {
-        if (cell.isFlagged) return tFlag;
-        if (!cell.isRevealed) return tUnknown;
-        if (cell.isMine) return tMine;
+        if (cell.state == State.Default) return tUnknown;
+        if (cell.state == State.Flagged) return tFlag;
+
+        if (cell.type == Type.Empty) return tZero;
+        if (cell.type == Type.Mine) return tMine;
+
         switch (cell.num)
         {
-            case 0: return tZero;
             case 1: return tOne;
             case 2: return tTwo;
             case 3: return tThree;
@@ -54,7 +56,8 @@ public class BoardRender : MonoBehaviour
             case 6: return tSix;
             case 7: return tSeven;
             case 8: return tEight;
-            default: return tUnknown;
         }
+
+        return tUnknown;
     }
 }

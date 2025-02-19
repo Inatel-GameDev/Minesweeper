@@ -1,11 +1,9 @@
 using UnityEngine;
-
-public struct Cell
+public class Cell
 {
     public int num;
-    public bool isMine;
-    public bool isRevealed;
-    public bool isFlagged;
+    public State state;
+    public Type type;
 
     public Vector3Int coordinates;
 }
