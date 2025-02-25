@@ -6,9 +6,9 @@ public class GameLogic : MonoBehaviour
     public static GameLogic instance;
     public Decoder decoderFlag;
 
-    public int width = 16;
-    public int height = 16;
-    public int nBombs = 10;
+    private int width;
+    private int height;
+    private int nBombs;
 
     private int remainingMines;
     private int remainingTiles;
@@ -30,6 +30,10 @@ public class GameLogic : MonoBehaviour
 
     public void Start()
     {
+        width = Global.Instance.getWidth();
+        height = Global.Instance.getHeight();
+        nBombs = Global.Instance.getNBombs();
+
         remainingMines = nBombs;
         remainingFlags = nBombs;
         remainingTiles = width * height - nBombs;
@@ -212,5 +216,10 @@ public class GameLogic : MonoBehaviour
             Clock.instance.Halt();
             Debug.Log("Você venceu!");
         }
+    }
+
+    public bool getFirstClick()
+    {
+        return firstClick;
     }
 }

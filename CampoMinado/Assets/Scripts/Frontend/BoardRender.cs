@@ -26,6 +26,8 @@ public class BoardRender : MonoBehaviour
 
     public void Show(Cell[,] grid)
     {
+        tilemap.ClearAllTiles();
+
         int width = grid.GetLength(0);
         int height = grid.GetLength(1);
 

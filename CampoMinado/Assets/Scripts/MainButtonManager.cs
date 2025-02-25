@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEngine;
 
 public class MainButtonManager : MonoBehaviour
@@ -24,8 +25,21 @@ public class MainButtonManager : MonoBehaviour
 
     private void OnMouseDown()
     {
-        GameLogic.instance.Start();
-        clock.Start();
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (GameLogic.instance.getFirstClick())
+            {
+                Global.Instance.changeDif();
+                Adjust.Instance.AdjustUI();
+                GameLogic.instance.Start();
+                clock.Start();
+            }
+            else
+            {
+                GameLogic.instance.Start();
+                clock.Start();
+            }
+        }
     }
 
     public void enableHappy()
