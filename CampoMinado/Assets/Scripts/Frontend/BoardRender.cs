@@ -4,6 +4,8 @@ using UnityEngine.Tilemaps;
 
 public class BoardRender : MonoBehaviour
 {
+    private Cell[,] grid;
+
     public Tile tUnknown;
     public Tile tMine;
     public Tile tFlag;
@@ -22,9 +24,10 @@ public class BoardRender : MonoBehaviour
     private void Awake()
     {
         tilemap = GetComponent<Tilemap>();
+        grid = Global.Instance.grid;
     }
 
-    public void Show(Cell[,] grid)
+    public void Show()
     {
         tilemap.ClearAllTiles();
 
