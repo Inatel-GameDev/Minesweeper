@@ -50,7 +50,11 @@ public class InputProcessor : MonoBehaviour
         if (x >= 0 && x < width && y >= 0 && y < height)
         {
             Cell curr = grid[x,y];
-            if (state) ToggleFlag(curr);
+            if (state)
+            {
+                ToggleFlag(curr);
+                FlagsCount.Instance.Show();
+            }
             else Reveal(curr);
         }
     }
