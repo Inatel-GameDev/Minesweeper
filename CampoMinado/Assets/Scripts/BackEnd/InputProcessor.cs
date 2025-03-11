@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 public class InputProcessor : MonoBehaviour
@@ -29,6 +26,7 @@ public class InputProcessor : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(1) && Global.Instance.gameState == GameState.Running) InputProtocol(true);
         if (Input.GetMouseButtonDown(0) && Global.Instance.gameState == GameState.Running) InputProtocol(false);
+        if (Input.GetKeyDown(KeyCode.Escape)) Application.Quit();
     }
 
     private void InputProtocol(bool state)
