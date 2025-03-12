@@ -124,7 +124,7 @@ public class InputProcessor : MonoBehaviour
     private void CheckVictory()
     {
         Debug.Log("Faltam: " + Global.Instance.rTiles + " Tiles e " + Global.Instance.rBombs + " Flags");
-        if (Global.Instance.rBombs == 0 && Global.Instance.rBombs == 0)
+        if (Global.Instance.rBombs == 0 && Global.Instance.rTiles == 0)
             Global.Instance.gameState = GameState.Won;
     }
 }
